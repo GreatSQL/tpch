@@ -1,92 +1,58 @@
 # tpch
 
+适用于GreatSQL AP引擎的TPC-H测试套件。
 
+适用版本：TPC-H 3.0.1。
 
-## Getting started
+相关文件介绍：
+- pdbgen.sh，并行构造TPC-H测试数据集，每个表生成多个测试文件分片，便于后续并行导入
+- pload.sh，将pdbgen.sh并行构造TPC-H测试数据集文件并行load到数据库中
+- queries-turbo，该目录下包含了22个TPC-H测试的SQL脚本，已经都默认加上适用于GreatSQL Turbo引擎的HINT语法，其中第11个SQL脚本17-20行之间需要根据测试数据规模进行调整。
+- queries-rapid，该目录下包含了22个TPC-H测试的SQL脚本，已经都默认加上适用于GreatSQL Rapid引擎的HINT语法，其中第11个SQL脚本17-20行之间需要根据测试数据规模进行调整。
+- run-tpch.sh，实现自动化运行TPC-H测试SQL语句的脚本。
+- tpch-create-table.sql，适用于GreatSQL AP引擎的建表DDL脚本。
+- greatsql-ap-test.sql，适用于GreatSQL AP引擎的测试脚本，可以在完成GreatSQL初始化后运行，测试验证对AP引擎的支持结果。
+- TPC-H_Tools_v3.0.1，TPC-H 3.0.1源码包
+- duckdb_dbgen.py，和pdbgen.sh类似，利用duckdb插件并行构造TPC-H测试数据集
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+自动化测试脚本 `run-tpch.sh` 的工作方式大致如下：
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
-
+1. 每条SQL共运行5次，前2次为预热作用，只会记录后3次的运行时间，结果类似下面这样：
 ```
-cd existing_repo
-git remote add origin http://gitlab.greatopensource.com/yejr/tpch.git
-git branch -M main
-git push -uf origin main
+[2024-01-03 07:51:41] BEGIN RUN TPC-H Q1 3 times
+[2024-01-03 07:51:42] TPC-H Q1 END, COST: 1.374s
+
+
+[2024-01-03 07:51:42] BEGIN RUN TPC-H Q1 4 times
+[2024-01-03 07:51:43] TPC-H Q1 END, COST: 1.267s
+
+
+[2024-01-03 07:51:43] BEGIN RUN TPC-H Q1 5 times
+[2024-01-03 07:51:44] TPC-H Q1 END, COST: 1.228s
 ```
+即同一条SQL语句共运行5次，只记录最后3次的耗时。
 
-## Integrate with your tools
+2. 每次运行SQL语句结束后都会休眠N秒钟，默认为5秒钟，可自定义参数 `sleeptime` 进行调整。
 
-- [ ] [Set up project integrations](http://gitlab.greatopensource.com/yejr/tpch/-/settings/integrations)
+3. 可自定义运行时产生的log文件目录，调整参数 `logdir` 即可。
 
-## Collaborate with your team
+4. 每条SQL运行耗时结果记录在文件 `${logdir}/run-tpch-queries.log` 中。
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+5. 每条SQL运行返回的结果记录在文件 `./${logdir}/tpch_queries_$i.res` 中。
 
-## Test and Deploy
+6. 要自行修改适用于自己环境的参数，包括 `workdir`、`tpchdb`、`host`、`port`、`user`、`passwd`等。
 
-Use the built-in continuous integration in GitLab.
+7. 最后可以用下面的命令获取测试结果：
+```
+$ cat run-tpch-queries.log | grep COST| awk '{if(NR%3==0){print $7"\n"}else{print $7}}'|sed 's/s//ig'
+...
+1.378
+1.160
+1.002
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+0.229
+0.251
+0.237
+...
+```
+相邻的3条记录，表示每条SQL最后3次的执行耗时。
