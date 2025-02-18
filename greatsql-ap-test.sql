@@ -41,12 +41,13 @@ INSERT INTO t1 VALUES
 
 INSTALL PLUGIN turbo SONAME 'turbo.so';
 
-SELECT 'EXPLAIN SELECT /*+SET_VAR(turbo_enable=ON) SET_VAR(turbo_cost_threshold=0)*/ * FROM t1 WHERE id >= 1;' AS EXEC_TEST_SQL;
-EXPLAIN SELECT * FROM t1 WHERE id >= 1;
+SELECT 'EXPLAIN FORMAT=TREE SELECT /*+SET_VAR(turbo_enable=ON) SET_VAR(turbo_cost_threshold=0)*/ * FROM t1 WHERE id >= 1;' AS EXEC_TEST_SQL;
+EXPLAIN FORMAT=TREE SELECT /*+SET_VAR(turbo_enable=ON) SET_VAR(turbo_cost_threshold=0)*/ * FROM t1 WHERE id >= 1;
 
 SELECT 'UNINSTALL PLUGIN turbo;' AS EXEC_TEST_SQL;
 UNINSTALL PLUGIN turbo;
 
+SELECT 'INSTALL PLUGIN rapid SONAME "ha_rapid.so";' AS EXEC_TEST_SQL;
 INSTALL PLUGIN rapid SONAME 'ha_rapid.so';
 
 SELECT 'ALTER TABLE t1 SECONDARY_ENGINE = rapid;' AS EXEC_TEST_SQL;
@@ -62,7 +63,7 @@ SELECT "SHOW TABLE STATUS LIKE 't1'\G" AS EXEC_TEST_SQL;
 SHOW TABLE STATUS LIKE 't1'\G
 
 SELECT 'EXPLAIN SELECT /*+SET_VAR(use_secondary_engine=1) SET_VAR(secondary_engine_cost_threshold=0)*/ * FROM t1 WHERE id >= 1;' AS EXEC_TEST_SQL;
-EXPLAIN SELECT * FROM t1 WHERE id >= 1;
+EXPLAIN SELECT /*+SET_VAR(use_secondary_engine=1) SET_VAR(secondary_engine_cost_threshold=0)*/ * FROM t1 WHERE id >= 1;
 
 SELECT 'ALTER TABLE t1 SECONDARY_ENGINE = null;' AS EXEC_TEST_SQL;
 ALTER TABLE t1 SECONDARY_ENGINE = null;
