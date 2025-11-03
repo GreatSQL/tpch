@@ -17,6 +17,7 @@ HAVING
             sum(ps_supplycost * ps_availqty) * 0.0001000000 /* SF1 */
             /* sum(ps_supplycost * ps_availqty) * 0.0000100000 /* SF10 */
             /* sum(ps_supplycost * ps_availqty) * 0.0000010000 /* SF100 */
+            /* sum(ps_supplycost * ps_availqty) * 0.0000003333 /* SF300 */
             /* sum(ps_supplycost * ps_availqty) * 0.0000001000 /* SF1000 */
         FROM
             partsupp,
