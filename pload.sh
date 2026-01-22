@@ -47,7 +47,6 @@ else
   echo "load data parallelly in ${thd} threads"
   sleep ${sleep}
 fi
-exit
 cd ${workdir}
 
 tbls="region nation supplier customer part partsupp orders lineitem"
@@ -67,7 +66,7 @@ do
     do
       f=${tbl}.tbl.${i}
 
-      while [ `mysqladmin pr|grep -v grep|grep 'load data.*SET_VAR'|wc -l` -gt ${thd} ]
+      while [ `$MYSQL_CLI -f -e "show processlist"|grep -vE 'grep|system user|show processlist'|grep 'load data.*SET_VAR'|wc -l` -gt ${thd} ]
       do
         echo "SLEEP ${sleep}, ${f}"
 	sleep ${sleep}
